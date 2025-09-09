@@ -1,8 +1,8 @@
 #!/bin/bash
-
-# ==============================
+#
 # Script quét mã độc cho WordPress
-# ==============================
+# Tự động nhận diện domain gốc, whitelist domain hợp pháp, báo cáo domain lạ
+#
 
 TARGET_DIR=${1:-.}
 LOG_FILE="malware_scan_report_$(date +%F_%T).log"
@@ -12,7 +12,7 @@ echo "Thời gian: $(date)" | tee -a "$LOG_FILE"
 echo "=============================================" | tee -a "$LOG_FILE"
 
 # ---------------------------------------------
-# 1. Quét các mẫu mã độc phổ biến
+# 1. Các mẫu code khả nghi (pattern)
 # ---------------------------------------------
 PATTERNS=(
   "eval("
@@ -44,7 +44,7 @@ for pattern in "${PATTERNS[@]}"; do
 done
 
 # ---------------------------------------------
-# 2. Tìm domain gốc (REAL_DOMAIN)
+# 2. Lấy domain gốc (REAL_DOMAIN)
 # ---------------------------------------------
 REAL_DOMAIN=$(grep -E "WP_HOME|WP_SITEURL" "$TARGET_DIR/wp-config.php" 2>/dev/null \
   | sed -E "s/.*'(https?:\/\/)?([^'\/]+).*/\2/" \
@@ -70,21 +70,75 @@ else
 fi
 
 # ---------------------------------------------
-# 3. Quét tất cả URL/link chèn
+# 3. Whitelist domain hợp pháp
+# ---------------------------------------------
+WHITELIST_DOMAINS=(
+  # Core WordPress
+  "wordpress.org"
+  "api.wordpress.org"
+  "downloads.wordpress.org"
+  "s.w.org"
+  "gravatar.com"
+  "wp.com"
+  "jetpack.com"
+
+  # Google CDN
+  "ajax.googleapis.com"
+  "fonts.googleapis.com"
+  "fonts.gstatic.com"
+  "maps.googleapis.com"
+  "maps.gstatic.com"
+
+  # Cloudflare CDN
+  "cdnjs.cloudflare.com"
+
+  # JSDelivr
+  "cdn.jsdelivr.net"
+
+  # Bootstrap CDN
+  "stackpath.bootstrapcdn.com"
+  "maxcdn.bootstrapcdn.com"
+
+  # jQuery CDN
+  "code.jquery.com"
+
+  # FontAwesome CDN
+  "use.fontawesome.com"
+  "kit.fontawesome.com"
+
+  # Microsoft
+  "ajax.aspnetcdn.com"
+)
+
+# ---------------------------------------------
+# 4. Quét tất cả URL/link chèn
 # ---------------------------------------------
 echo "[+] Đang quét các URL/link khả nghi..." | tee -a "$LOG_FILE"
-grep -Rni --include="*.php" --include="*.js" --include="*.html" --include=".htaccess" -E "http[s]?://[a-zA-Z0-9./?=_-]*" "$TARGET_DIR" >> "$LOG_FILE"
+
+ALL_URLS=$(grep -Rho --include="*.php" --include="*.js" --include="*.html" --include=".htaccess" \
+  -E "http[s]?://[a-zA-Z0-9./?=_-]*" "$TARGET_DIR" | sort -u)
 
 if [ -n "$REAL_DOMAIN" ]; then
-  echo "[+] Danh sách domain khả nghi (không khớp $REAL_DOMAIN):" | tee -a "$LOG_FILE"
-  grep -Rho --include="*.php" --include="*.js" --include="*.html" --include=".htaccess" -E "http[s]?://[a-zA-Z0-9./?=_-]*" "$TARGET_DIR" \
-    | sort -u \
-    | grep -v "$REAL_DOMAIN" \
-    | tee -a "$LOG_FILE"
+  echo "[+] Danh sách domain khả nghi (không khớp $REAL_DOMAIN và không nằm trong whitelist):" | tee -a "$LOG_FILE"
+  echo "$ALL_URLS" | grep -v "$REAL_DOMAIN" | while read -r url; do
+    safe=false
+    for safe_domain in "${WHITELIST_DOMAINS[@]}"; do
+      if echo "$url" | grep -q "$safe_domain"; then
+        safe=true
+        break
+      fi
+    done
+    if [ "$safe" = false ]; then
+      echo "$url" | tee -a "$LOG_FILE"
+    fi
+  done
+else
+  echo "[!] Không có domain gốc, chỉ hiển thị tất cả URL tìm thấy:" | tee -a "$LOG_FILE"
+  echo "$ALL_URLS" | tee -a "$LOG_FILE"
 fi
 
 # ---------------------------------------------
-# 4. Kiểm tra file đáng ngờ
+# 5. Kiểm tra file bất thường
 # ---------------------------------------------
 echo "[+] Kiểm tra file PHP có quyền thực thi bất thường..." | tee -a "$LOG_FILE"
 find "$TARGET_DIR" -type f -name "*.php" -perm /111 >> "$LOG_FILE"
