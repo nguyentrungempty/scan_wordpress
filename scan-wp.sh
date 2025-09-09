@@ -28,16 +28,19 @@ PATTERNS=(
   "php:\/\/input"
   "php:\/\/shell"
   "@file_get_contents"
-  "GOTo "
   "stripos("
   "header("
-  "\\\\x[0-9a-fA-F]{2}"  # mã hóa hexa đáng ngờ
+  "iframe"
+  "<script"
+  "window.location"
+  "document.write"
+  "\\\\x[0-9a-fA-F]{2}"
 )
 
 echo "[+] Đang quét các mẫu mã độc..." | tee -a "$LOG_FILE"
 for pattern in "${PATTERNS[@]}"; do
   echo "  -> Tìm: $pattern" | tee -a "$LOG_FILE"
-  grep -Rni --include="*.php" -E "$pattern" "$TARGET_DIR" >> "$LOG_FILE"
+  grep -Rni --include="*.php" --include="*.js" --include="*.html" --include=".htaccess" -E "$pattern" "$TARGET_DIR" >> "$LOG_FILE"
 done
 
 # ---------------------------------------------
@@ -70,27 +73,27 @@ fi
 # 3. Quét tất cả URL/link chèn
 # ---------------------------------------------
 echo "[+] Đang quét các URL/link khả nghi..." | tee -a "$LOG_FILE"
-grep -Rni --include="*.php" --include="*.js" --include="*.html" -E "http[s]?://[a-zA-Z0-9./?=_-]*" "$TARGET_DIR" >> "$LOG_FILE"
+grep -Rni --include="*.php" --include="*.js" --include="*.html" --include=".htaccess" -E "http[s]?://[a-zA-Z0-9./?=_-]*" "$TARGET_DIR" >> "$LOG_FILE"
 
 if [ -n "$REAL_DOMAIN" ]; then
   echo "[+] Danh sách domain khả nghi (không khớp $REAL_DOMAIN):" | tee -a "$LOG_FILE"
-  grep -Rho --include="*.php" --include="*.js" --include="*.html" -E "http[s]?://[a-zA-Z0-9./?=_-]*" "$TARGET_DIR" \
+  grep -Rho --include="*.php" --include="*.js" --include="*.html" --include=".htaccess" -E "http[s]?://[a-zA-Z0-9./?=_-]*" "$TARGET_DIR" \
     | sort -u \
     | grep -v "$REAL_DOMAIN" \
     | tee -a "$LOG_FILE"
 fi
 
 # ---------------------------------------------
-# 4. Một số kiểm tra bổ sung
+# 4. Kiểm tra file đáng ngờ
 # ---------------------------------------------
 echo "[+] Kiểm tra file PHP có quyền thực thi bất thường..." | tee -a "$LOG_FILE"
 find "$TARGET_DIR" -type f -name "*.php" -perm /111 >> "$LOG_FILE"
 
-echo "[+] File PHP bị thay đổi trong 7 ngày qua:" | tee -a "$LOG_FILE"
-find "$TARGET_DIR" -type f -name "*.php" -mtime -7 >> "$LOG_FILE"
+echo "[+] File bị thay đổi trong 7 ngày qua:" | tee -a "$LOG_FILE"
+find "$TARGET_DIR" -type f \( -name "*.php" -o -name "*.html" -o -name ".htaccess" \) -mtime -7 >> "$LOG_FILE"
 
-echo "[+] File PHP ẩn đáng ngờ:" | tee -a "$LOG_FILE"
-find "$TARGET_DIR" -type f -name ".*.php" >> "$LOG_FILE"
+echo "[+] File ẩn đáng ngờ:" | tee -a "$LOG_FILE"
+find "$TARGET_DIR" -type f -name ".*.php" -o -name ".*.html" -o -name ".htaccess" >> "$LOG_FILE"
 
 # ---------------------------------------------
 echo "=============================================" | tee -a "$LOG_FILE"
