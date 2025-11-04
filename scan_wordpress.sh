@@ -26,6 +26,8 @@ PATTERNS=(
   "GOTo "
   "stripos("
   "header("
+  "https://"
+  "http://"
   "(str_rot13|base64_decode|urldecode)"
   "tempnam\("
   "fwrite\("
