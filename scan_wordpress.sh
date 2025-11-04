@@ -17,6 +17,8 @@ PATTERNS=(
   "exec("
   "passthru("
   "system("
+  "shell_exec\\("
+  "proc_close\\("
   "assert("
   "str_rot13("
   "preg_replace(.*\/e)"
@@ -33,7 +35,6 @@ PATTERNS=(
   "fwrite\("
   "include\(.*tempnam"
   "@call_user_func"
-  # Remote fetch / includes
   "curl_init("
   "curl_exec("
   "curl_setopt("
