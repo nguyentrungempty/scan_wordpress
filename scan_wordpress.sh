@@ -37,13 +37,6 @@ PATTERNS=(
   "curl_init("
   "curl_exec("
   "curl_setopt("
-  "fopen\\(.*https?://"
-  "include\\s*\\(.*https?://"
-  "require\\s*\\(.*https?://"
-  "include_once\\s*\\(.*https?://"
-  "require_once\\s*\\(.*https?://"
-  "@include\\s*\\("
-  "@require\\s*\\("
 )
 
 echo "[+] Đang quét các mẫu mã độc thường gặp..." | tee -a "$LOG_FILE"
