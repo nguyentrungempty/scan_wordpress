@@ -23,7 +23,6 @@ PATTERNS=(
   "php:\/\/input"
   "php:\/\/shell"
   "@file_get_contents"
-  "@file_get_contents"
   "GOTo "
   "stripos("
   "header("
