@@ -23,14 +23,15 @@ PATTERNS=(
   "php:\/\/input"
   "php:\/\/shell"
   "@file_get_contents"
+  "@file_get_contents"
   "GOTo "
   "stripos("
   "header("
-  "\\\\x[0-9a-fA-F]{2}"  # Mã hóa hexa đáng ngờ
   "(str_rot13|base64_decode|urldecode)"
   "tempnam\("
   "fwrite\("
   "include\(.*tempnam"
+  "@call_user_func"
 )
 
 echo "[+] Đang quét các mẫu mã độc thường gặp..." | tee -a "$LOG_FILE"
