@@ -27,7 +27,6 @@ PATTERNS=(
   "@file_get_contents"
   "GOTo "
   "encophp"
-  "stripos("
   "header("
   "Craw"
   "(str_rot13|base64_decode|urldecode)"
