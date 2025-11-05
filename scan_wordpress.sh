@@ -34,9 +34,6 @@ PATTERNS=(
   "fwrite\("
   "include\(.*tempnam"
   "@call_user_func"
-  "curl_init("
-  "curl_exec("
-  "curl_setopt("
 )
 
 echo "[+] Đang quét các mẫu mã độc thường gặp..." | tee -a "$LOG_FILE"
