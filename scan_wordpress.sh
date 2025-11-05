@@ -28,7 +28,6 @@ PATTERNS=(
   "GOTo "
   "stripos("
   "header("
-  ".html"
   "(str_rot13|base64_decode|urldecode)"
   "tempnam\("
   "fwrite\("
